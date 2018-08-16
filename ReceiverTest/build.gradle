@@ -17,26 +17,27 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
-
-    applicationVariants.all { variant ->
-        variant.outputs.each { output ->
-            def file = output.outputFile
-            output.outputFile = new File(file.parent,
-                    "receivertest.apk")
-
-            println("$buildDir/outputs/apk/")
-            println("$rootDir/ReceiverHook/src/main/assets")
-
-            copy {
-                from "$buildDir/outputs/apk/receivertest.apk"
-                into "$rootDir/ReceiverHook/src/main/assets"
-            }
-        }
-    }
 }
 
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     testCompile 'junit:junit:4.12'
     compile 'com.android.support:appcompat-v7:25.2.0'
+}
+
+assemble.doLast {
+    android.applicationVariants.all { variant ->
+        // Copy Release artifact to HostApp's assets and rename
+        if (variant.name == "release") {
+            variant.outputs.each { output ->
+                File originFile = output.outputFile
+                println originFile.absolutePath
+                copy {
+                    from originFile
+                    into "$rootDir/ReceiverHook/src/main/assets"
+                    rename(originFile.name, "receivertest.apk")
+                }
+            }
+        }
+    }
 }
